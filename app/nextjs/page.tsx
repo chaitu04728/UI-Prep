@@ -1139,6 +1139,479 @@ export default async function handler(
     note: "Route Handlers are Server Components that return a Response. Use for API endpoints, webhooks, proxying external APIs. Server Actions often eliminate the need for mutation endpoints. Route Handlers support streaming and middleware.",
   },
 
+  // ─── PAGES ROUTER DATA FETCHING (Legacy but Interview-Important) ───────
+  {
+    id: "get-static-props",
+    category: "Pages Router",
+    badgeClass: "badge-purple",
+    title: "getStaticProps - Static Site Generation (SSG)",
+    desc: "Pages Router method for SSG. Runs at build time to fetch data and generate static HTML. Perfect for content that doesn't change often (blog posts, marketing pages). Data is baked into HTML at build time.",
+    code: `// pages/blog/[slug].tsx
+import { GetStaticProps } from 'next';
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  publishedAt: string;
+}
+
+interface Props {
+  post: Post;
+}
+
+// ✅ RUNS AT BUILD TIME (during npm run build)
+export const getStaticProps: GetStaticProps<Props> = async (context) => {
+  const { params } = context;
+  
+  // Fetch data from any source
+  const post = await fetch(\`https://api.example.com/posts/\${params?.slug}\`)
+    .then(res => res.json());
+  
+  // Or database query
+  // const post = await db.post.findUnique({ where: { slug: params?.slug } });
+  
+  // Return props to component
+  return {
+    props: {
+      post,
+    },
+    // Optional: Incremental Static Regeneration (ISR)
+    // revalidate: 60,  // Re-generate page every 60 seconds
+  };
+};
+
+// Component receives props
+export default function BlogPost({ post }: Props) {
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <time>{new Date(post.publishedAt).toLocaleDateString()}</time>
+      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+    </article>
+  );
+}
+
+// ─── WITH ISR (Incremental Static Regeneration) ────────────
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const data = await fetchData(params?.id);
+  
+  return {
+    props: { data },
+    revalidate: 10,  // ⏱️ Regenerate at most every 10 seconds
+  };
+};
+// First 10s → serve cached. After 10s → stale, rebuild on next request
+
+// ─── NOT FOUND & REDIRECT ──────────────────────────────────
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const post = await db.post.findUnique({ where: { slug: params?.slug } });
+  
+  // Show 404 page
+  if (!post) {
+    return { notFound: true };
+  }
+  
+  // Redirect (e.g., unpublished post)
+  if (!post.published) {
+    return {
+      redirect: {
+        destination: '/blog',
+        permanent: false,
+      },
+    };
+  }
+  
+  return { props: { post } };
+};
+
+// ─── PREVIEW MODE (for CMS draft content) ──────────────────
+export const getStaticProps: GetStaticProps = async ({ preview = false, previewData }) => {
+  // If preview mode, fetch draft content
+  const data = preview
+    ? await fetchDraftContent(previewData)
+    : await fetchPublishedContent();
+  
+  return { props: { data, preview } };
+};`,
+    note: "getStaticProps runs ONLY at build time (never in browser or on server during requests). Generated HTML is reused for every request. Use for content that can be pre-rendered. Add 'revalidate' for ISR to periodically rebuild pages. App Router equivalent: fetch with cache: 'force-cache'.",
+  },
+  {
+    id: "get-server-side-props",
+    category: "Pages Router",
+    badgeClass: "badge-purple",
+    title: "getServerSideProps - Server-Side Rendering (SSR)",
+    desc: "Pages Router method for SSR. Runs on EVERY request on the server. Use when data must be fresh for each user (user dashboards, personalized content, real-time data). Slower than SSG but always up-to-date.",
+    code: `// pages/dashboard.tsx
+import { GetServerSideProps } from 'next';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Props {
+  user: User;
+  posts: Post[];
+}
+
+// ✅ RUNS ON EVERY REQUEST (server-side only)
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const { req, res, params, query } = context;
+  
+  // Access cookies from request
+  const token = req.cookies.token;
+  
+  // Fetch user based on auth token
+  const user = await fetch('https://api.example.com/me', {
+    headers: { Authorization: \`Bearer \${token}\` },
+  }).then(res => res.json());
+  
+  // Fetch personalized content
+  const posts = await db.post.findMany({
+    where: { authorId: user.id },
+  });
+  
+  return {
+    props: {
+      user,
+      posts,
+    },
+  };
+};
+
+export default function Dashboard({ user, posts }: Props) {
+  return (
+    <div>
+      <h1>Welcome, {user.name}</h1>
+      <PostList posts={posts} />
+    </div>
+  );
+}
+
+// ─── AUTHENTICATION & REDIRECTS ────────────────────────────
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getSession(req);
+  
+  // Redirect if not authenticated
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/login?redirect=/dashboard',
+        permanent: false,
+      },
+    };
+  }
+  
+  const userData = await fetchUserData(session.userId);
+  
+  return { props: { user: userData } };
+};
+
+// ─── SETTING HEADERS & COOKIES ─────────────────────────────
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+  // Set custom headers
+  res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=59');
+  
+  // Set cookies
+  res.setHeader('Set-Cookie', 'sessionId=abc123; Path=/; HttpOnly');
+  
+  const data = await fetchData();
+  return { props: { data } };
+};
+
+// ─── USING QUERY PARAMETERS ────────────────────────────────
+// URL: /search?q=nextjs&page=2
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+  const searchQuery = query.q as string;
+  const page = parseInt(query.page as string) || 1;
+  
+  const results = await searchPosts(searchQuery, page);
+  
+  return { props: { results, query: searchQuery, page } };
+};
+
+// ─── NOT FOUND (404) ───────────────────────────────────────
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const product = await db.product.findUnique({ 
+    where: { id: params?.id as string } 
+  });
+  
+  if (!product) {
+    return { notFound: true };  // Shows 404 page
+  }
+  
+  return { props: { product } };
+};
+
+// ─── ERROR HANDLING ────────────────────────────────────────
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const data = await fetchExternalAPI();
+    return { props: { data } };
+  } catch (error) {
+    console.error('Failed to fetch:', error);
+    
+    // Pass error to component
+    return {
+      props: {
+        error: 'Failed to load data',
+        data: null,
+      },
+    };
+  }
+};`,
+    note: "getServerSideProps ALWAYS runs on the server for EVERY request. Use when data must be request-specific (auth, user-specific content, search results). Slower than getStaticProps but always fresh. Cannot be used with Static Export. App Router equivalent: fetch with cache: 'no-store' or export const dynamic = 'force-dynamic'.",
+  },
+  {
+    id: "get-static-paths",
+    category: "Pages Router",
+    badgeClass: "badge-purple",
+    title: "getStaticPaths - Dynamic Route Generation",
+    desc: "Required when using getStaticProps with dynamic routes. Defines which paths to pre-render at build time. Returns array of params objects. Use 'fallback' to control behavior for paths not in the list.",
+    code: `// pages/blog/[slug].tsx
+import { GetStaticPaths, GetStaticProps } from 'next';
+
+// ✅ STEP 1: Define which paths to build
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Fetch all blog post slugs
+  const posts = await db.post.findMany({
+    select: { slug: true },
+  });
+  
+  // Generate paths from database data
+  const paths = posts.map(post => ({
+    params: { slug: post.slug },
+  }));
+  
+  // Example output:
+  // paths = [
+  //   { params: { slug: 'intro-to-nextjs' } },
+  //   { params: { slug: 'react-18-features' } },
+  //   { params: { slug: 'typescript-tips' } },
+  // ];
+  
+  return {
+    paths,
+    fallback: false,  // See fallback options below
+  };
+};
+
+// ✅ STEP 2: Fetch data for each path
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const post = await db.post.findUnique({
+    where: { slug: params?.slug as string },
+  });
+  
+  return { props: { post } };
+};
+
+export default function BlogPost({ post }: { post: Post }) {
+  return <article>{/* render post */}</article>;
+}
+
+// ─── FALLBACK OPTIONS ──────────────────────────────────────
+
+// 1️⃣ fallback: false
+// - Only paths in 'paths' are pre-rendered
+// - All other paths → 404
+// - Use when: small number of pages, all known at build time
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [
+      { params: { id: '1' } },
+      { params: { id: '2' } },
+    ],
+    fallback: false,  // /posts/3 → 404
+  };
+};
+
+// 2️⃣ fallback: true
+// - Paths in 'paths' → pre-rendered at build
+// - Other paths → Next.js generates on-demand on first request
+// - Shows loading state while generating
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Only pre-render top 10 popular posts
+  const topPosts = await getTop10Posts();
+  
+  return {
+    paths: topPosts.map(p => ({ params: { slug: p.slug } })),
+    fallback: true,  // Other posts generated on first visit
+  };
+};
+
+// Component must handle loading state
+export default function Post({ post }: { post: Post }) {
+  const router = useRouter();
+  
+  // Show loading while generating page
+  if (router.isFallback) {
+    return <div>Loading...</div>;
+  }
+  
+  return <article>{post.title}</article>;
+}
+
+// 3️⃣ fallback: 'blocking'
+// - Similar to 'true' but waits for page to generate
+// - No loading state needed (user waits for full page)
+// - Better for SEO (no loading flicker)
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],  // Generate all pages on-demand
+    fallback: 'blocking',  // Wait for generation, then serve
+  };
+};
+
+// No loading state needed
+export default function Post({ post }: { post: Post }) {
+  return <article>{post.title}</article>;
+}
+
+// ─── MULTI-SEGMENT DYNAMIC ROUTES ──────────────────────────
+// pages/[category]/[slug].tsx
+export const getStaticPaths: GetStaticPaths = async () => {
+  const posts = await db.post.findMany({
+    select: { category: true, slug: true },
+  });
+  
+  const paths = posts.map(post => ({
+    params: {
+      category: post.category,
+      slug: post.slug,
+    },
+  }));
+  
+  // Generates: /tech/nextjs-guide, /design/figma-tips, etc.
+  return { paths, fallback: 'blocking' };
+};
+
+// ─── CATCH-ALL ROUTES ──────────────────────────────────────
+// pages/docs/[...slug].tsx
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [
+      { params: { slug: ['intro'] } },
+      { params: { slug: ['guide', 'installation'] } },
+      { params: { slug: ['api', 'reference', 'fetch'] } },
+    ],
+    fallback: false,
+  };
+};
+// Matches: /docs/intro, /docs/guide/installation, /docs/api/reference/fetch`,
+    note: "getStaticPaths only runs at build time and only for dynamic routes using getStaticProps. 'paths' defines pre-rendered pages. 'fallback: false' = strict (404 for unlisted), 'fallback: true' = on-demand with loading state, 'fallback: blocking' = on-demand without loading state (waits for generation). Use 'blocking' for better SEO. App Router auto-generates with generateStaticParams.",
+  },
+  {
+    id: "pages-isr-revalidate",
+    category: "Pages Router",
+    badgeClass: "badge-purple",
+    title: "ISR (Incremental Static Regeneration) - Pages Router",
+    desc: "Combine benefits of SSG and SSR. Pre-render at build, then regenerate in background after 'revalidate' seconds. Stale-while-revalidate pattern: serve cached page while rebuilding. Also supports on-demand revalidation.",
+    code: `// pages/posts/[id].tsx
+import { GetStaticProps, GetStaticPaths } from 'next';
+
+// ✅ ENABLE ISR: Add 'revalidate' to getStaticProps
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const post = await fetch(\`https://api.example.com/posts/\${params?.id}\`)
+    .then(res => res.json());
+  
+  return {
+    props: { post },
+    revalidate: 60,  // ⏱️ Regenerate at most every 60 seconds
+  };
+};
+
+// How ISR works:
+// 1. User visits page within 60s → Serve cached version (instant)
+// 2. After 60s, next visitor:
+//    a) Gets cached version (stale but instant)
+//    b) Next.js rebuilds page in background
+//    c) Subsequent visitors get new version
+// 3. Repeat every 60s
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],  // No pages pre-rendered at build
+    fallback: 'blocking',  // Generate on first visit, then cache + revalidate
+  };
+};
+
+export default function Post({ post }: { post: Post }) {
+  return <article>{post.title}</article>;
+}
+
+// ─── ON-DEMAND REVALIDATION (Next.js 12.2+) ────────────────
+// Trigger regeneration without waiting for revalidate time
+
+// pages/api/revalidate.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Check for secret to confirm request is valid
+  if (req.query.secret !== process.env.REVALIDATE_SECRET) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  
+  try {
+    // Revalidate specific path
+    await res.revalidate('/posts/1');
+    
+    // Success
+    return res.json({ revalidated: true });
+  } catch (err) {
+    return res.status(500).send('Error revalidating');
+  }
+}
+
+// Trigger from webhook (e.g., when CMS content updates):
+// POST /api/revalidate?secret=YOUR_SECRET&path=/posts/123
+
+// ─── MULTIPLE PATHS REVALIDATION ───────────────────────────
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const paths = ['/posts/1', '/posts/2', '/blog'];
+  
+  try {
+    await Promise.all(paths.map(path => res.revalidate(path)));
+    return res.json({ revalidated: true, paths });
+  } catch (err) {
+    return res.status(500).send('Error revalidating');
+  }
+}
+
+// ─── ISR WITH DYNAMIC DATA ─────────────────────────────────
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const [post, comments, relatedPosts] = await Promise.all([
+    fetchPost(params?.id),
+    fetchComments(params?.id),
+    fetchRelatedPosts(params?.id),
+  ]);
+  
+  return {
+    props: { post, comments, relatedPosts },
+    revalidate: 300,  // 5 minutes
+  };
+};
+
+// ─── USE CASES ─────────────────────────────────────────────
+
+// 1. Blog posts - revalidate: 3600 (1 hour)
+// Content doesn't change often but needs updates
+
+// 2. E-commerce products - revalidate: 60 (1 minute)
+// Prices/stock change frequently but instant isn't critical
+
+// 3. User profiles - revalidate: 10 (10 seconds)
+// Balance freshness with performance
+
+// 4. Marketing pages - revalidate: 86400 (24 hours)
+// Rarely change, mostly static
+
+// 5. Real-time data - DON'T use ISR
+// Use getServerSideProps instead for truly real-time data`,
+    note: "ISR = best of both worlds. Pages are static (fast) but can update without rebuilding entire site. 'revalidate' = seconds to cache page. After time expires, next request triggers background rebuild (stale-while-revalidate). Use on-demand revalidation (res.revalidate) to immediately update specific pages (e.g., when CMS webhook fires). App Router equivalent: fetch with next: { revalidate: 60 }.",
+  },
+
   // ─── OPTIMIZATION ──────────────────────────────────────────────────────────
   {
     id: "next-image",

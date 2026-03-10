@@ -49,6 +49,17 @@ const features = [
     ],
   },
   {
+    title: "🔷 TypeScript Concepts",
+    desc: "Complete TypeScript guide - types, generics, utilities",
+    href: "/ts",
+    items: [
+      "Basic & Advanced Types",
+      "Generics & Constraints",
+      "Utility Types",
+      "React + TypeScript",
+    ],
+  },
+  {
     title: "🎮 Code Playground",
     desc: "Live code editor for JS, TS, and React JSX",
     href: "/playground",
@@ -85,6 +96,17 @@ const features = [
       "Branching & Merging",
       "Remote Collaboration",
       "Advanced Operations",
+    ],
+  },
+  {
+    title: "🚀 Advanced Patterns",
+    desc: "Production-ready AI integration, API patterns, and JWT auth",
+    href: "/ai-integration",
+    items: [
+      "AI SDK & Streaming",
+      "Axios Interceptors",
+      "JWT Authentication",
+      "Service Layer Patterns",
     ],
   },
 ];
@@ -126,9 +148,9 @@ export default function HomePage() {
             margin: "0 auto 30px",
           }}
         >
-          A comprehensive, interview-ready reference covering 97+ concepts
-          across React, Next.js, and JavaScript fundamentals — with live demos,
-          interactive playground, and complete API guides.
+          A comprehensive, interview-ready reference covering 150+ concepts
+          across React, Next.js, JavaScript, TypeScript, and Advanced Patterns —
+          with live demos, interactive playground, and complete API guides.
         </p>
 
         <input
@@ -402,7 +424,7 @@ export default function HomePage() {
                   textShadow: "0 2px 10px rgba(0,0,0,0.2)",
                 }}
               >
-                97+
+                150+
               </div>
               <div
                 style={{
@@ -443,7 +465,7 @@ export default function HomePage() {
                   textShadow: "0 2px 10px rgba(0,0,0,0.2)",
                 }}
               >
-                7
+                10
               </div>
               <div
                 style={{
@@ -484,7 +506,7 @@ export default function HomePage() {
                   textShadow: "0 2px 10px rgba(0,0,0,0.2)",
                 }}
               >
-                200+
+                350+
               </div>
               <div
                 style={{

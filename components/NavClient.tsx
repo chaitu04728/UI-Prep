@@ -130,6 +130,44 @@ const nextjsLinks = [
   },
 ];
 
+const tsLinks = [
+  {
+    label: "Basics",
+    items: [
+      { href: "/ts#basic-types", label: "Basic Types" },
+      { href: "/ts#interfaces", label: "Interfaces" },
+      { href: "/ts#type-aliases", label: "Type Aliases" },
+      { href: "/ts#enums", label: "Enums" },
+      { href: "/ts#literal-types", label: "Literal Types" },
+      { href: "/ts#type-assertions", label: "Type Assertions" },
+      { href: "/ts#classes", label: "Classes & Access Modifiers" },
+      { href: "/ts#modules-namespaces", label: "Modules & Namespaces" },
+    ],
+  },
+  {
+    label: "Advanced Types",
+    items: [
+      { href: "/ts#generics", label: "Generics" },
+      { href: "/ts#union-intersection", label: "Union & Intersection" },
+      { href: "/ts#type-guards", label: "Type Guards" },
+      { href: "/ts#utility-types", label: "Utility Types" },
+      { href: "/ts#never-unknown", label: "never & unknown" },
+      { href: "/ts#mapped-types", label: "Mapped Types" },
+      { href: "/ts#conditional-types", label: "Conditional Types" },
+      { href: "/ts#decorators", label: "Decorators" },
+    ],
+  },
+  {
+    label: "Configuration & Integration",
+    items: [
+      { href: "/ts#tsconfig", label: "tsconfig.json" },
+      { href: "/ts#declaration-files", label: "Declaration Files (.d.ts)" },
+      { href: "/ts#react-with-ts", label: "React with TypeScript" },
+      { href: "/ts#best-practices", label: "Best Practices" },
+    ],
+  },
+];
+
 const jsGroups = [
   {
     label: "Core JS",
@@ -395,6 +433,17 @@ const gitGroups = [
   },
 ];
 
+const advancedLinks = [
+  {
+    label: "AI & Modern Patterns",
+    items: [
+      { href: "/ai-integration", label: "AI Integration (Vercel AI SDK)" },
+      { href: "/api-patterns", label: "API Patterns (Axios/HOC)" },
+      { href: "/jwt-auth", label: "JWT Authentication" },
+    ],
+  },
+];
+
 export default function NavClient() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -406,10 +455,16 @@ export default function NavClient() {
   );
   const isNextActive = pathname.startsWith("/nextjs");
   const isJsActive = pathname.startsWith("/js");
+  const isTsActive = pathname.startsWith("/ts");
   const isInbuiltMethodsActive = pathname.startsWith("/inbuilt-methods");
   const isApiActive = pathname.startsWith("/api");
   const isPlaygroundActive = pathname.startsWith("/playground");
   const isGitActive = pathname.startsWith("/git");
+  const isAdvancedActive = [
+    "/ai-integration",
+    "/api-patterns",
+    "/jwt-auth",
+  ].includes(pathname);
 
   return (
     <nav>
@@ -563,6 +618,36 @@ export default function NavClient() {
           </div>
         </div>
 
+        {/* TypeScript Dropdown */}
+        <div
+          className={`nav-dropdown ${activeDropdown === "ts" ? "active" : ""}`}
+        >
+          <button
+            className={`dropdown-trigger${isTsActive ? " active" : ""}`}
+            onClick={() =>
+              setActiveDropdown(activeDropdown === "ts" ? null : "ts")
+            }
+          >
+            TS ▾
+          </button>
+          <div className="dropdown-menu">
+            {tsLinks.map((group) => (
+              <div key={group.label}>
+                <div className="dropdown-group-label">{group.label}</div>
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Code Playground */}
         <Link
           href="/playground"
@@ -651,6 +736,40 @@ export default function NavClient() {
           </button>
           <div className="dropdown-menu">
             {gitGroups.map((group) => (
+              <div key={group.label}>
+                <div className="dropdown-group-label">{group.label}</div>
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Advanced Dropdown */}
+        <div
+          className={`nav-dropdown ${
+            activeDropdown === "advanced" ? "active" : ""
+          }`}
+        >
+          <button
+            className={`dropdown-trigger${isAdvancedActive ? " active" : ""}`}
+            onClick={() =>
+              setActiveDropdown(
+                activeDropdown === "advanced" ? null : "advanced",
+              )
+            }
+          >
+            Advanced ▾
+          </button>
+          <div className="dropdown-menu">
+            {advancedLinks.map((group) => (
               <div key={group.label}>
                 <div className="dropdown-group-label">{group.label}</div>
                 {group.items.map((item) => (
