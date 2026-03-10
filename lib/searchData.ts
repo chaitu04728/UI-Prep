@@ -406,6 +406,13 @@ export const searchableContent: SearchResult[] = [
     category: "Next.js",
     keywords: ["isr", "incremental static regeneration", "revalidate", "pages router", "stale-while-revalidate", "on-demand"],
   },
+  {
+    title: "Build Process",
+    description: "Understanding npm run build: compilation, static generation, and why console.logs appear during build",
+    href: "/nextjs#build-process",
+    category: "Next.js",
+    keywords: ["build", "npm run build", "static generation", "build time", "compilation", "optimization", "pre-render"],
+  },
 
   // Playground
   {

@@ -1917,8 +1917,209 @@ export const config = { matcher: ['/admin/:path*'] };
     note: "Middleware runs on every request before rendering. Use for auth, localization, A/B testing, bot detection. Runs on Edge = fast globally. Can't use Node.js APIs. For heavy logic, use Server Components or Route Handlers.",
   },
   {
+    id: "build-process",
+    category: "Build & Deploy",
+    badgeClass: "badge-orange",
+    title: "Build Process (npm run build) - What Happens?",
+    desc: "Understanding the Next.js build process: compilation, static generation, optimization, and why you see console.logs during build. Learn how Next.js determines what to pre-render and what stays dynamic.",
+    code: `// 🏗️ BUILD COMMAND: npm run build
+// 
+// Output you see:
+// ✓ Compiled successfully
+// ✓ Linting and checking validity of types
+// ✓ Collecting page data
+//   Generating static pages (13/22)  [===]
+//   🔥 Lazy initializer runs ONCE        ← Your console.logs!
+//   🔄 useMemo: sorting...               ← Your console.logs!
+// ✓ Generating static pages (22/22)
+// ✓ Collecting build traces
+// ✓ Finalizing page optimization
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 🤔 WHY DO CONSOLE.LOGS APPEAR DURING BUILD?
+// ─────────────────────────────────────────────────────────────
+
+// Answer: Server Components execute at BUILD TIME for static pages
+// Your component code literally runs during "npm run build"
+
+// Example: app/hooks/page.tsx
+export default function HooksPage() {
+  // This code runs at BUILD TIME for static pages
+  const [items] = useState(() => {
+    console.log("🔥 Lazy initializer runs ONCE");  // ← Executes during build!
+    return generateItems();
+  });
+  
+  const sorted = useMemo(() => {
+    console.log("🔄 useMemo: sorting...");  // ← Executes during build!
+    return items.sort();
+  }, [items]);
+  
+  return <div>{/* JSX */}</div>;
+}
+
+// During build, Next.js:
+// 1. Executes your Server Component
+// 2. Captures the rendered HTML
+// 3. Saves to .next/server/app/hooks.html
+// 4. At runtime → serves pre-rendered HTML (instant load!)
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 📊 BUILD PHASES EXPLAINED
+// ─────────────────────────────────────────────────────────────
+
+// PHASE 1: Compilation
+// "✓ Compiled successfully"
+// - TypeScript → JavaScript
+// - React components → optimized code
+// - CSS processing & minification
+// - Webpack/Turbopack bundling
+
+// PHASE 2: Linting & Type Checking
+// "✓ Linting and checking validity of types"
+// - Runs ESLint on all files
+// - TypeScript type checking (tsc --noEmit)
+// - Catches errors before deployment
+
+// PHASE 3: Collecting Page Data
+// "✓ Collecting page data"
+// - Discovers all routes (app/, pages/)
+// - Determines rendering strategy for each page
+// - Identifies static vs dynamic pages
+
+// PHASE 4: Generating Static Pages
+// "✓ Generating static pages (22/22)"
+// - Executes Server Components for static pages
+// - Runs getStaticProps/getStaticPaths (Pages Router)
+// - Pre-renders HTML for each static route
+// - ⚠️ YOUR CODE RUNS HERE (console.logs appear!)
+
+// PHASE 5: Build Traces
+// "✓ Collecting build traces"
+// - Analyzes dependencies for each page
+// - Creates minimal bundles (code splitting)
+// - Tree shaking unused code
+
+// PHASE 6: Optimization
+// "✓ Finalizing page optimization"
+// - Minifies JavaScript & CSS
+// - Generates static assets
+// - Creates .next/ output folder
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 🔍 HOW NEXT.JS DETERMINES STATIC VS DYNAMIC
+// ─────────────────────────────────────────────────────────────
+
+// ✅ STATIC (Pre-rendered at build):
+// - No dynamic functions (cookies, headers, searchParams)
+// - No 'use client' with useSearchParams/usePathname reading search params
+// - fetch() with default cache: 'force-cache'
+// - No export const dynamic = 'force-dynamic'
+
+async function StaticPage() {
+  // Static data fetch (cached)
+  const data = await fetch('https://api.example.com/data', {
+    cache: 'force-cache',  // default
+  });
+  
+  return <div>{data.title}</div>;
+}
+// ↑ Executed during build → HTML saved → instant runtime
+
+// ❌ DYNAMIC (Rendered at request time):
+// - Uses cookies(), headers(), searchParams
+// - fetch() with cache: 'no-store'
+// - export const dynamic = 'force-dynamic'
+
+import { cookies } from 'next/headers';
+
+async function DynamicPage() {
+  const token = cookies().get('token');  // ← Dynamic function!
+  
+  // Page is now DYNAMIC (rendered at request time)
+  return <div>User: {token}</div>;
+}
+// ↑ NOT executed during build → runs on every request
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 📈 READING BUILD OUTPUT
+// ─────────────────────────────────────────────────────────────
+
+// After build completes, you see:
+
+// Route (app)                              Size     First Load JS
+// ┌ ○ /                                    5.02 kB        92.1 kB
+// ├ ○ /about                               1.23 kB        88.3 kB
+// ├ λ /api/posts                           0 B                0 B
+// ├ ● /blog/[slug]                         2.45 kB        89.5 kB
+// ├ ƒ /dashboard                           3.12 kB        90.2 kB
+// └ ○ /posts                               4.56 kB        91.6 kB
+
+// LEGEND:
+// ○  Static    - Pre-rendered at build (instant)
+// ●  SSG       - Static with getStaticProps/generateStaticParams
+// λ  Server    - Route Handler (API endpoint)
+// ƒ  Dynamic   - Rendered on every request (SSR)
+// ℹ  ISR       - Static with revalidation
+
+// First Load JS:
+// - JavaScript downloaded on first page visit
+// - Includes shared chunks (React, Next.js runtime)
+// - Keep under 100 kB for best performance
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 📦 BUILD OUTPUT FILES (.next folder)
+// ─────────────────────────────────────────────────────────────
+
+// .next/
+//   static/              → Static assets (hashed filenames)
+//     chunks/            → JavaScript bundles
+//     css/               → Stylesheets
+//     media/             → Images, fonts
+//   server/              → Server-side code
+//     app/               → Pre-rendered HTML pages
+//     chunks/            → Server Components
+//   cache/               → Build cache (speeds up rebuilds)
+//   standalone/          → Minimal Node.js server (if output: 'standalone')
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 🎯 KEY TAKEAWAYS
+// ─────────────────────────────────────────────────────────────
+
+// 1. Static pages execute during build
+//    → Your component code runs
+//    → console.logs appear
+//    → HTML is saved for instant serving
+
+// 2. "Generating static pages (13/22)"
+//    → Next.js found 22 total pages
+//    → 13 pages so far have been pre-rendered
+//    → Progress updates as build continues
+
+// 3. Build = Compile + Render + Optimize
+//    → Not just bundling code
+//    → Actually executing your components
+//    → Creating production-ready HTML
+
+// 4. Static = Fast, Dynamic = Fresh
+//    → Static: Pre-rendered (build) → serve cached HTML
+//    → Dynamic: Render on-demand (request) → always fresh
+
+// 5. App Router default = Static
+//    → Unless you use dynamic functions
+//    → Or fetch with cache: 'no-store'
+//    → Or export const dynamic = 'force-dynamic'`,
+    note: "Build process pre-renders static pages by executing your Server Components. This is why console.logs appear during 'npm run build' — your code literally runs! Static pages = instant load. Dynamic pages = skipped during build, rendered at request time. Understanding this is critical for performance optimization.",
+  },
+  {
     id: "deployment",
-    category: "Deployment",
+    category: "Build & Deploy",
     badgeClass: "badge-orange",
     title: "Deployment & Config",
     desc: "next.config.js configures Next.js behavior: environment variables, rewrites, redirects, headers, custom webpack. Understand output modes (standalone, export) for different deployment targets.",
