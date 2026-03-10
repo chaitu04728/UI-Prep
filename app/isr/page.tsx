@@ -39,44 +39,97 @@ export default async function ISRPage() {
         </div>
         <h1>Incremental Static Regeneration</h1>
         <p>
-          This page is statically generated but <strong>re-validates every 30 seconds</strong>.
-          The data below was frozen at cache time — but the cache expires and silently
-          regenerates in the background.
+          This page is statically generated but{" "}
+          <strong>re-validates every 30 seconds</strong>. The data below was
+          frozen at cache time — but the cache expires and silently regenerates
+          in the background.
         </p>
       </div>
 
       <div className="demo">
         <div className="demo-label">📊 "Live" Dashboard Stats (ISR cached)</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "0.5rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1rem",
+            marginTop: "0.5rem",
+          }}
+        >
           {[
-            { label: "Total Orders", value: stats.totalOrders.toLocaleString(), color: "var(--green)" },
-            { label: "Active Users", value: stats.activeUsers.toLocaleString(), color: "var(--blue)" },
-            { label: "Revenue ($)", value: `$${Number(stats.revenue).toLocaleString()}`, color: "var(--yellow)" },
-            { label: "Cache Snapshot", value: stats.lastUpdated.slice(11, 19) + " UTC", color: "var(--muted)" },
+            {
+              label: "Total Orders",
+              value: stats.totalOrders.toLocaleString(),
+              color: "var(--green)",
+            },
+            {
+              label: "Active Users",
+              value: stats.activeUsers.toLocaleString(),
+              color: "var(--blue)",
+            },
+            {
+              label: "Revenue ($)",
+              value: `$${Number(stats.revenue).toLocaleString()}`,
+              color: "var(--yellow)",
+            },
+            {
+              label: "Cache Snapshot",
+              value: stats.lastUpdated.slice(11, 19) + " UTC",
+              color: "var(--muted)",
+            },
           ].map((s) => (
-            <div key={s.label} style={{
-              background: "var(--bg)",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              padding: "0.8rem",
-            }}>
-              <div style={{ fontSize: "0.7rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
-              <div style={{ fontSize: "1.3rem", color: s.color, fontWeight: 700, marginTop: "0.3rem" }}>{s.value}</div>
+            <div
+              key={s.label}
+              style={{
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                padding: "0.8rem",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.7rem",
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {s.label}
+              </div>
+              <div
+                style={{
+                  fontSize: "1.3rem",
+                  color: s.color,
+                  fontWeight: 700,
+                  marginTop: "0.3rem",
+                }}
+              >
+                {s.value}
+              </div>
             </div>
           ))}
         </div>
-        <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "0.8rem" }}>
-          ↑ Values change on re-validation (every 30s), not on every request. First request
-          after 30s triggers background regeneration — users never wait.
+        <p
+          style={{
+            fontSize: "0.78rem",
+            color: "var(--muted)",
+            marginTop: "0.8rem",
+          }}
+        >
+          ↑ Values change on re-validation (every 30s), not on every request.
+          First request after 30s triggers background regeneration — users never
+          wait.
         </p>
       </div>
 
       <div className="tip-box">
         <strong>🎤 Interview Answer</strong>
-        "ISR is the best of both SSG and SSR. Pages start as static HTML for fast
-        delivery, but after a configurable time window, Next.js regenerates the page in
-        the background. Users always get a fast cached response; the staleness is bounded.
-        Perfect for e-commerce product pages, pricing, or leaderboards."
+        "ISR is the best of both SSG and SSR. Pages start as static HTML for
+        fast delivery, but after a configurable time window, Next.js regenerates
+        the page in the background. Users always get a fast cached response; the
+        staleness is bounded. Perfect for e-commerce product pages, pricing, or
+        leaderboards."
       </div>
 
       <div className="card">
@@ -125,11 +178,13 @@ revalidatePath("/products");  // in a Server Action or Route Handler`}
 }`}
         />
       </div>
-      </div>
 
-      <div style={{ padding: "1rem 0", color: "var(--muted)", fontSize: "0.8rem" }}>
-        ✅ <strong>Pros:</strong> Fast like SSG, stays fresh like SSR, no user-visible delay on regen{" · "}
-        ❌ <strong>Cons:</strong> One request after expiry gets stale data (acceptable trade-off)
+      <div
+        style={{ padding: "1rem 0", color: "var(--muted)", fontSize: "0.8rem" }}
+      >
+        ✅ <strong>Pros:</strong> Fast like SSG, stays fresh like SSR, no
+        user-visible delay on regen{" · "}❌ <strong>Cons:</strong> One request
+        after expiry gets stale data (acceptable trade-off)
       </div>
     </div>
   );
