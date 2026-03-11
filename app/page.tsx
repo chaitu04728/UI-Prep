@@ -71,6 +71,17 @@ const features = [
     ],
   },
   {
+    title: "♿ Accessibility (A11y)",
+    desc: "Complete guide to web accessibility and inclusive design",
+    href: "/accessibility",
+    items: [
+      "WCAG & ARIA",
+      "Screen Readers",
+      "Keyboard Navigation",
+      "Testing & Tools",
+    ],
+  },
+  {
     title: "📚 Inbuilt Methods",
     desc: "Complete reference with examples for all JS methods",
     href: "/inbuilt-methods",

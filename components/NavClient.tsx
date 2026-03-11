@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const renderLinks = [
   { href: "/ssg", label: "SSG — Static Site Generation" },
@@ -449,6 +449,27 @@ export default function NavClient() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".nav-dropdown")) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (activeDropdown) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [activeDropdown]);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setActiveDropdown(null);
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const isRenderActive = ["/ssg", "/ssr", "/isr", "/csr"].includes(pathname);
   const isReactActive = ["/hooks", "/context", "/react", "/state"].includes(
     pathname,
@@ -456,9 +477,12 @@ export default function NavClient() {
   const isNextActive = pathname.startsWith("/nextjs");
   const isJsActive = pathname.startsWith("/js");
   const isTsActive = pathname.startsWith("/ts");
+  const isLangActive = isJsActive || isTsActive;
+  const isFrameworkActive = isReactActive || isNextActive;
   const isInbuiltMethodsActive = pathname.startsWith("/inbuilt-methods");
   const isApiActive = pathname.startsWith("/api");
   const isPlaygroundActive = pathname.startsWith("/playground");
+  const isAccessibilityActive = pathname.startsWith("/accessibility");
   const isGitActive = pathname.startsWith("/git");
   const isAdvancedActive = [
     "/ai-integration",
@@ -524,127 +548,113 @@ export default function NavClient() {
           </div>
         </div>
 
-        {/* React Dropdown */}
+        {/* Languages Dropdown (JavaScript + TypeScript) */}
         <div
           className={`nav-dropdown ${
-            activeDropdown === "react" ? "active" : ""
+            activeDropdown === "lang" ? "active" : ""
           }`}
         >
           <button
-            className={`dropdown-trigger${isReactActive ? " active" : ""}`}
+            className={`dropdown-trigger${isLangActive ? " active" : ""}`}
             onClick={() =>
-              setActiveDropdown(activeDropdown === "react" ? null : "react")
+              setActiveDropdown(activeDropdown === "lang" ? null : "lang")
             }
           >
-            React ▾
+            Languages ▾
           </button>
-          <div className="dropdown-menu">
-            {reactLinks.map((group) => (
-              <div key={group.label}>
-                <div className="dropdown-group-label">{group.label}</div>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+          <div className="dropdown-menu dropdown-menu-wide">
+            <div className="dropdown-columns">
+              <div className="dropdown-column">
+                <div className="dropdown-section-title">JavaScript</div>
+                {jsGroups.map((group) => (
+                  <div key={group.label}>
+                    <div className="dropdown-group-label">{group.label}</div>
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+              <div className="dropdown-column">
+                <div className="dropdown-section-title">TypeScript</div>
+                {tsLinks.map((group) => (
+                  <div key={group.label}>
+                    <div className="dropdown-group-label">{group.label}</div>
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Next.js Dropdown */}
+        {/* Frameworks Dropdown (React + Next.js) */}
         <div
           className={`nav-dropdown ${
-            activeDropdown === "nextjs" ? "active" : ""
+            activeDropdown === "framework" ? "active" : ""
           }`}
         >
           <button
-            className={`dropdown-trigger${isNextActive ? " active" : ""}`}
+            className={`dropdown-trigger${isFrameworkActive ? " active" : ""}`}
             onClick={() =>
-              setActiveDropdown(activeDropdown === "nextjs" ? null : "nextjs")
+              setActiveDropdown(
+                activeDropdown === "framework" ? null : "framework",
+              )
             }
           >
-            Next.js ▾
+            Frameworks ▾
           </button>
-          <div className="dropdown-menu">
-            {nextjsLinks.map((group) => (
-              <div key={group.label}>
-                <div className="dropdown-group-label">{group.label}</div>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+          <div className="dropdown-menu dropdown-menu-wide">
+            <div className="dropdown-columns">
+              <div className="dropdown-column">
+                <div className="dropdown-section-title">React</div>
+                {reactLinks.map((group) => (
+                  <div key={group.label}>
+                    <div className="dropdown-group-label">{group.label}</div>
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* JS Dropdown */}
-        <div
-          className={`nav-dropdown ${activeDropdown === "js" ? "active" : ""}`}
-        >
-          <button
-            className={`dropdown-trigger${isJsActive ? " active" : ""}`}
-            onClick={() =>
-              setActiveDropdown(activeDropdown === "js" ? null : "js")
-            }
-          >
-            JS ▾
-          </button>
-          <div className="dropdown-menu">
-            {jsGroups.map((group) => (
-              <div key={group.label}>
-                <div className="dropdown-group-label">{group.label}</div>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+              <div className="dropdown-column">
+                <div className="dropdown-section-title">Next.js</div>
+                {nextjsLinks.map((group) => (
+                  <div key={group.label}>
+                    <div className="dropdown-group-label">{group.label}</div>
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* TypeScript Dropdown */}
-        <div
-          className={`nav-dropdown ${activeDropdown === "ts" ? "active" : ""}`}
-        >
-          <button
-            className={`dropdown-trigger${isTsActive ? " active" : ""}`}
-            onClick={() =>
-              setActiveDropdown(activeDropdown === "ts" ? null : "ts")
-            }
-          >
-            TS ▾
-          </button>
-          <div className="dropdown-menu">
-            {tsLinks.map((group) => (
-              <div key={group.label}>
-                <div className="dropdown-group-label">{group.label}</div>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ))}
+            </div>
           </div>
         </div>
 
@@ -652,10 +662,18 @@ export default function NavClient() {
         <Link
           href="/playground"
           className={isPlaygroundActive ? "active" : ""}
-          style={{ marginLeft: "10px" }}
           onClick={() => setMobileMenuOpen(false)}
         >
           🎮 Playground
+        </Link>
+
+        {/* Accessibility */}
+        <Link
+          href="/accessibility"
+          className={isAccessibilityActive ? "active" : ""}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          ♿ Accessibility
         </Link>
 
         {/* Inbuilt Methods Dropdown */}
