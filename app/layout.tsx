@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: "Web Dev Explorer",
   description:
     "React, Next.js & JavaScript - 97+ concepts with live demos, playground, and API guides",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+  },
 };
 
 export default function RootLayout({
