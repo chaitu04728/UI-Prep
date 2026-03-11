@@ -298,6 +298,85 @@ export const searchableContent: SearchResult[] = [
     keywords: ["custom hooks", "api", "react", "reusable"],
   },
 
+  // Testing (Jest)
+  {
+    title: "Jest Testing Guide",
+    description: "Test structure, matchers, mocking, and coverage with Jest",
+    href: "/jest",
+    category: "Testing",
+    keywords: ["jest", "testing", "unit tests", "assertions", "mocking"],
+  },
+  {
+    title: "Test Structure (AAA)",
+    description: "Arrange-Act-Assert pattern for clear test cases",
+    href: "/jest#test-structure",
+    category: "Testing",
+    keywords: ["jest", "aaa", "arrange act assert", "test structure"],
+  },
+  {
+    title: "Jest Matchers",
+    description: "Core assertion matchers like toBe, toEqual, and toThrow",
+    href: "/jest#matchers",
+    category: "Testing",
+    keywords: ["jest", "matchers", "toBe", "toEqual", "assertions"],
+  },
+  {
+    title: "Mock Functions & Spies",
+    description: "Mock behavior, track calls, and spy on real functions",
+    href: "/jest#mocking",
+    category: "Testing",
+    keywords: ["jest", "mock", "jest.fn", "spy", "spyOn", "mockResolvedValue"],
+  },
+  {
+    title: "Module Mocking",
+    description: "Replace module exports with controlled test doubles",
+    href: "/jest#module-mocking",
+    category: "Testing",
+    keywords: ["jest", "module mocking", "jest.mock", "requireActual"],
+  },
+  {
+    title: "API Mocking with MSW",
+    description: "Intercept network requests with Mock Service Worker",
+    href: "/jest#api-mocking",
+    category: "Testing",
+    keywords: ["jest", "msw", "api mocking", "mock service worker", "fetch"],
+  },
+  {
+    title: "Async Testing",
+    description: "Test promises, async/await, and rejected errors",
+    href: "/jest#async-testing",
+    category: "Testing",
+    keywords: ["jest", "async", "await", "resolves", "rejects"],
+  },
+  {
+    title: "Fake Timers",
+    description: "Control setTimeout and setInterval with fake timers",
+    href: "/jest#timers",
+    category: "Testing",
+    keywords: ["jest", "fake timers", "advanceTimersByTime", "setTimeout"],
+  },
+  {
+    title: "Setup & Teardown",
+    description: "Global and per-test setup with beforeEach and afterEach",
+    href: "/jest#setup-teardown",
+    category: "Testing",
+    keywords: ["jest", "beforeEach", "afterEach", "setup", "teardown"],
+  },
+  {
+    title: "Snapshot Testing",
+    description: "Capture UI output with snapshots",
+    href: "/jest#snapshots",
+    category: "Testing",
+    keywords: ["jest", "snapshots", "toMatchSnapshot", "ui"],
+  },
+  {
+    title: "Code Coverage",
+    description: "Generate coverage reports and enforce thresholds",
+    href: "/jest#coverage",
+    category: "Testing",
+    keywords: ["jest", "coverage", "thresholds", "report"],
+  },
+
   // JavaScript Core Concepts
   {
     title: "Closures",

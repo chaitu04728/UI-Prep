@@ -483,6 +483,7 @@ export default function NavClient() {
   const isApiActive = pathname.startsWith("/api");
   const isPlaygroundActive = pathname.startsWith("/playground");
   const isAccessibilityActive = pathname.startsWith("/accessibility");
+  const isJestActive = pathname.startsWith("/jest");
   const isGitActive = pathname.startsWith("/git");
   const isAdvancedActive = [
     "/ai-integration",
@@ -674,6 +675,15 @@ export default function NavClient() {
           onClick={() => setMobileMenuOpen(false)}
         >
           ♿ Accessibility
+        </Link>
+
+        {/* Jest */}
+        <Link
+          href="/jest"
+          className={isJestActive ? "active" : ""}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          🧪 Jest
         </Link>
 
         {/* Inbuilt Methods Dropdown */}

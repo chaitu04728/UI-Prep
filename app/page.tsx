@@ -99,6 +99,17 @@ const features = [
     items: ["Fetch API", "Axios", "GraphQL", "WebSocket & Real-time"],
   },
   {
+    title: "🧪 Jest Testing",
+    desc: "Test structure, mocking, and API testing with MSW",
+    href: "/jest",
+    items: [
+      "Test Structure",
+      "Matchers & Mocks",
+      "API Mocking (MSW)",
+      "Coverage & Snapshots",
+    ],
+  },
+  {
     title: "🔧 Git Commands",
     desc: "Complete Git reference with 60+ commands and workflows",
     href: "/git",
